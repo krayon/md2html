@@ -68,6 +68,20 @@ DEBUG=0
 #   stderr.
 #ERROR_LOG="${HOME}/md2html.log"
 
+# PATH_MARKDOWN_PY
+#   The path to the markdown_py binary. If set to "*", $PATH is used (ie.
+#   "markdown_py" called without a path).
+PATH_MARKDOWN_PY="*"
+
+# MARKDOWN_PY_FLAGS
+#   The flags to call the markdown_py binary with.
+MARKDOWN_PY_FLAGS="-x abbr -x def_list -x footnotes -x tables -x toc -x fenced_code -x strikethrough -o html4"
+
+# FILES
+#   The files to process. If set, these files will be processed. Can also be
+#   provided on the command line.
+FILES=""
+
 # ] CONFIG_END
 
 
@@ -250,6 +264,9 @@ cat <<EOF
                       for editing.
 -v|--verbose        - Displays extra debugging information.  This is the same
                       as setting DEBUG=1 in your config.
+<FILES>             - List of one or more files to process
+                      ( <FILES> in config, currently: ${FILES[@]} )
+
 
 Example: ${_binname}
 EOF
@@ -316,6 +333,20 @@ done #}
 
 #----------------------------------------------------------
 decho "START"
+
+# Check for required commands
+# markdown_py (REQUIRED)
+decho "Path for markdown_py set to: '${PATH_MARKDOWN_PY}'..."
+[ "${PATH_MARKDOWN_PY}" == "*" ] && PATH_MARKDOWN_PY="markdown_py"
+PATH_MARKDOWN_PY="$(check_for_cmd "markdown_py" "${PATH_MARKDOWN_PY}" 1 "python-markdown")" || exit $?
+
+[ -z "${PATH_MARKDOWN_PY}" ] && {
+    echo >&2 "ERROR: markdown_py is required (set PATH_MARKDOWN_PY in config?)"
+    exit ${ERR_MISSINGDEP}
+}
+decho "markdown_py path: ${PATH_MARKDOWN_PY}"
+
+
 
 # Process command line parameters
 opts=$(\
@@ -386,14 +417,33 @@ tmpdir="$(mktemp --tmpdir --directory ${_binname}.XXXXX)" || {
 }
 
 while [ ! -z "${1}" ]; do #{
-    files+=("${1}")
+    FILES+=("${1}")
     shift 1
 done #}
 
-[ -z "${files}" ] && {
-    >&2 echo "ERROR: files not set, and none provided on command line"
+[ -z "${FILES[@]}" ] && {
+    >&2 echo "ERROR: FILES not set, and none provided on command line"
     exit ${ERR_USAGE}
 }
+for infile in "${FILES[@]}"; do #{
+    [ "${infile: -2:2}" != "md" ] && {
+        echo >&2 "WARNING: No md extension, ignoring; ${infile}"
+        continue
+    }
+
+    outfile="${infile%.*}.html"
+
+    # Generating HTML
+
+    title="$(sed -n 's/^# \([^#]*\) #$/\1/p;q' <"${infile}")"
+
+    echo "Generating ${title} ( ${infile} -> ${outfile} )"
+
+    decho "${PATH_MARKDOWN_PY} ${MARKDOWN_PY_FLAGS}"' <"'"${infile}"'" >>"'"${outfile}"'"'
+    "${PATH_MARKDOWN_PY}" ${MARKDOWN_PY_FLAGS} <"${infile}" >>"${outfile}"
+
+    echo >>"${outfile}"
+done #}
 
 decho "DONE"
 

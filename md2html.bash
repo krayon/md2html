@@ -269,7 +269,7 @@ ${APP_NAME} is a wrapper to call markdown_py with a template.
 Usage: ${_binname} [-v|--verbose] -h|--help
        ${_binname} [-v|--verbose] -V|--version
 
-       ${_binname} [-v|--verbose] [<infile> [...]]
+       ${_binname} [-v|--verbose] [-t|--template] <template_file>] [<infile> [...]]
 
 -h|--help           - Displays this help
 -V|--version        - Displays the program version
@@ -291,6 +291,8 @@ cat <<EOF
                       for editing.
 -v|--verbose        - Displays extra debugging information.  This is the same
                       as setting DEBUG=1 in your config.
+-t|--template       - Sets the template to be used for ${APP_NAME}. If provided,
+                      and empty, skips checking the default templates.
 <FILES>             - List of one or more files to process
                       ( FILES in config, currently: ${FILES[@]} )
 
@@ -381,8 +383,8 @@ decho "markdown_py path: ${PATH_MARKDOWN_PY}"
 # Process command line parameters
 opts=$(\
     getopt\
-        --options v,h,V,C\
-        --long verbose,help,version,configuration\
+        --options v,h,V,C,t:\
+        --long verbose,help,version,configuration,template:\
         --name "${_binname}"\
         --\
         "$@"\
@@ -397,6 +399,13 @@ while :; do #{
         -v|--verbose)
             decho "Verbose mode specified"
             DEBUG=1
+        ;;
+
+        # Template # [-t|--template] <template_file>
+        -t|--template)
+            decho "Template: ${2}"
+            TEMPLATE="${2}"
+            shift
         ;;
 
         # Help # -h|--help

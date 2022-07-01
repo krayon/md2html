@@ -269,7 +269,7 @@ ${APP_NAME} is a wrapper to call markdown_py with a template.
 Usage: ${_binname} [-v|--verbose] -h|--help
        ${_binname} [-v|--verbose] -V|--version
 
-       ${_binname} [-v|--verbose] [-t|--template] <template_file>] [<infile> [...]]
+       ${_binname} [-v|--verbose] [-t|--template] <template_file>] [<FILES> [...]]
 
 -h|--help           - Displays this help
 -V|--version        - Displays the program version
@@ -293,9 +293,24 @@ cat <<EOF
                       as setting DEBUG=1 in your config.
 -t|--template       - Sets the template to be used for ${APP_NAME}. If provided,
                       and empty, skips checking the default templates.
-<FILES>             - List of one or more files to process
-                      ( FILES in config, currently: ${FILES[@]} )
-
+<FILES> [...]       - List of one or more files to process (
+EOF
+        [ -z "${FILES[*]}" ] && {
+cat <<EOF
+                        FILES[] in config - currently empty
+EOF
+        } || {
+cat <<EOF
+                        FILES[] in config, currently:
+EOF
+            for f in "${FILES[@]}"; do #{
+cat <<EOF
+                          ${f}
+EOF
+            done #}
+        }
+cat <<EOF
+                      )
 
 Example: ${_binname}
 EOF

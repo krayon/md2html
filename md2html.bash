@@ -498,16 +498,17 @@ template=""
 
     true
 } || {
-    template="${TEMPLATE}"
     [ ! -z "${TEMPLATE}" ] && {
-        [ -e "${template}" ] && {
-            >&2 echo "WARNING: Failed to find the template: ${template}"
-            template=""
-        }
-
-        [ ! -r "${template}" ] && {
-            >&2 echo "WARNING: Unable to read template: ${template}"
-            template=""
+        [ -e "${TEMPLATE}" ] && {
+            [ -r "${TEMPLATE}" ] && {
+                template="${TEMPLATE}"
+            } || {
+                >&2 echo "WARNING: Unable to read template: ${TEMPLATE}"
+            }
+            true
+        } || {
+            >&2 echo "WARNING: Failed to find the template: ${TEMPLATE}"
+            true
         }
     }
 }
